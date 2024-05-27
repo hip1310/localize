@@ -37,10 +37,10 @@ describe('PhraseController', () => {
       jest.spyOn(service, 'searchByQuery').mockResolvedValue(expectedResult);
 
       // Act
-      const result = await controller.searchByQuery(query);
+      const result = await controller.searchByQuery(query, 'createdAt:asc');
 
       // Assert
-      expect(service.searchByQuery).toHaveBeenCalledWith(query);
+      expect(service.searchByQuery).toHaveBeenCalledWith(query, 'createdAt:asc');
       expect(result).toEqual(expectedResult);
     });
   });

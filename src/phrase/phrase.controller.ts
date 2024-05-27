@@ -12,17 +12,23 @@ export class PhraseController {
 
   /**
    * Searches for phrases containing the specified text.
-   * @param query The text to search for in phrases.
+   * @Query query The text to search for in phrases.
+   * @Query sort in phrases.
    * @returns An array of phrases matching the search query.
    */
   @Get('search')
   @ApiQuery({ name: 'query', description: 'Text to search for in phrases' })
+  @ApiQuery({ name: 'sortBy', description: 'Sort in phrases', required: false })
   @ApiResponse({
     status: 200,
     description: 'Returns phrases containing the specified text',
   })
-  async searchByQuery(@Query('query') query: string) {
-    return this.phraseService.searchByQuery(query);
+  @ApiResponse({ status: 404, description: 'Phrase not found' })
+  async searchByQuery(
+    @Query('query') query: string,
+    @Query('sortBy') sortBy: string,
+  ) {
+    return this.phraseService.searchByQuery(query, sortBy);
   }
 
   /**
@@ -36,6 +42,7 @@ export class PhraseController {
     status: 200,
     description: 'Returns a phrase object without translations',
   })
+  @ApiResponse({ status: 404, description: 'Phrase not found' })
   async findById(@Param('id') id: string) {
     return this.phraseService.findById(id);
   }
@@ -53,7 +60,7 @@ export class PhraseController {
     status: 200,
     description: 'Returns a translation of a phrase',
   })
-  @ApiResponse({ status: 404, description: 'Phrase or translation not found' })
+  @ApiResponse({ status: 404, description: 'Phrase not found' })
   async findByIdAndLanguage(
     @Param('id') id: string,
     @Param('language') language: string,

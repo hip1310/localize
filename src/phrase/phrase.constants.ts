@@ -32,7 +32,7 @@ export const phrases: PhraseType[] = [
   },
   {
     id: 2,
-    phrase: 'Goodbye!',
+    phrase: 'Hello, Goodbye!',
     status: 'active',
     createdAt: new Date('2024-05-24T10:15:00+00:00'),
     updatedAt: new Date('2024-05-24T10:15:00+00:00'),

@@ -1,10 +1,15 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { ElasticsearchService } from '@nestjs/elasticsearch';
 import { phrases, PHRASES_INDEX, PhraseType } from './phrase.constants';
 import {
   AggregationsAggregate,
   SearchHit,
   SearchResponse,
+  SortCombinations,
 } from '@elastic/elasticsearch/lib/api/types';
 
 /**
@@ -21,16 +26,36 @@ export class PhraseService {
 
   /**
    * Searches for phrases containing the specified text.
-   * @param query The text to search for in phrases.
+   * @query query The text to search for in phrases.
+   * @query sortBy Sort in phrases.
    * @returns An array of phrases matching the search query.
    */
-  async searchByQuery(query: string): Promise<PhraseType[]> {
+  async searchByQuery(query: string, sortBy: string): Promise<PhraseType[]> {
+    let elasticSearchSort: SortCombinations = { createdAt: { order: 'asc' } };
+    if (sortBy) {
+      const validFields = ['createdAt', 'updatedAt', 'id', 'status'];
+      let sort = sortBy.split(':');
+      if (
+        sort.length !== 2 ||
+        !validFields.includes(sort[0]) ||
+        !['asc', 'desc'].includes(sort[1])
+      ) {
+        throw new BadRequestException(
+          'Invalid Sort format. Please use the format: createdAt:asc|desc, updatedAt:asc|desc, id:asc|desc, status:asc|desc',
+        );
+      }
+      elasticSearchSort = {
+        [sort[0]]: { order: sort[1] === 'asc' ? 'asc' : 'desc' },
+      };
+    }
+
     const body: SearchResponse<
       PhraseType,
       Record<string, AggregationsAggregate>
     > = await this.elasticsearchService.search({
       index: PHRASES_INDEX,
       body: {
+        sort: elasticSearchSort,
         query: {
           bool: {
             should: [
@@ -62,7 +87,7 @@ export class PhraseService {
    * @param id The ID of the phrase to find.
    * @returns The found phrase object or undefined if not found.
    */
-  async findById(id: string): Promise<PhraseType[]> {
+  async findById(id: string): Promise<PhraseType | {}> {
     const body: SearchResponse<
       PhraseType,
       Record<string, AggregationsAggregate>
@@ -78,7 +103,8 @@ export class PhraseService {
       },
     });
 
-    return this.extractSources(body);
+    const phrases = this.extractSources(body);
+    return phrases?.[0] || {};
   }
 
   // /**
