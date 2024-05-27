@@ -1,7 +1,11 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { ElasticsearchService } from '@nestjs/elasticsearch';
 import { phrases, PHRASES_INDEX, PhraseType } from './phrase.constants';
-import { AggregationsAggregate, SearchHit, SearchResponse } from '@elastic/elasticsearch/lib/api/types';
+import {
+  AggregationsAggregate,
+  SearchHit,
+  SearchResponse,
+} from '@elastic/elasticsearch/lib/api/types';
 
 /**
  * Service responsible for handling phrase-related operations.
@@ -21,22 +25,30 @@ export class PhraseService {
    * @returns An array of phrases matching the search query.
    */
   async searchByQuery(query: string): Promise<PhraseType[]> {
-    const body: SearchResponse<PhraseType, Record<string, AggregationsAggregate>> = await this.elasticsearchService.search({
+    const body: SearchResponse<
+      PhraseType,
+      Record<string, AggregationsAggregate>
+    > = await this.elasticsearchService.search({
       index: PHRASES_INDEX,
       body: {
         query: {
           bool: {
             should: [
               //Status must be 'active' | 'pending' | 'spam' | 'deleted'
-              { match: { status: query } },
+              // { match: { status: query } },
               {
-                //It will seach *query* in the phrase field and in the translations.fr and translations.es fields
-                multi_match: {
-                  query: query,
-                  type: 'phrase_prefix',
-                  fields: ['phrase', 'translations.fr', 'translations.es'],
+                match_phrase_prefix: {
+                  phrase: query,
                 },
               },
+              // {
+              //   //It will seach *query* in the phrase field and in the translations.fr and translations.es fields
+              //   multi_match: {
+              //     query: query,
+              //     type: 'phrase_prefix',
+              //     fields: ['phrase', 'translations.fr', 'translations.es'],
+              //   },
+              // },
             ],
           },
         },
@@ -51,11 +63,17 @@ export class PhraseService {
    * @returns The found phrase object or undefined if not found.
    */
   async findById(id: string): Promise<PhraseType[]> {
-    const body: SearchResponse<PhraseType, Record<string, AggregationsAggregate>> = await this.elasticsearchService.search({
+    const body: SearchResponse<
+      PhraseType,
+      Record<string, AggregationsAggregate>
+    > = await this.elasticsearchService.search({
       index: PHRASES_INDEX,
       body: {
         query: {
           ids: { values: [id] },
+        },
+        _source: {
+          excludes: ['translations'],
         },
       },
     });
@@ -70,7 +88,10 @@ export class PhraseService {
   //  * @returns The translation text or undefined if not found.
   //  */
   async findByIdAndLanguage(id: string, language: string): Promise<string> {
-    const body: SearchResponse<PhraseType, Record<string, AggregationsAggregate>> = await this.elasticsearchService.search({
+    const body: SearchResponse<
+      PhraseType,
+      Record<string, AggregationsAggregate>
+    > = await this.elasticsearchService.search({
       index: PHRASES_INDEX,
       body: {
         query: {
@@ -81,6 +102,7 @@ export class PhraseService {
             ],
           },
         },
+        _source: [`translations.${language}`],
       },
     });
 
@@ -141,7 +163,9 @@ export class PhraseService {
    * @param body The search response body.
    * @returns An array of the _source fields from the hits.
    */
-  extractSources(body: SearchResponse<PhraseType, Record<string, AggregationsAggregate>>): PhraseType[] {
+  extractSources(
+    body: SearchResponse<PhraseType, Record<string, AggregationsAggregate>>,
+  ): PhraseType[] {
     const hits = body.hits.hits as SearchHit<PhraseType>[];
     if (hits.length === 0) {
       throw new NotFoundException('Phrase not found');

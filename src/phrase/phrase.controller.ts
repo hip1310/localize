@@ -10,7 +10,6 @@ import { PhraseService } from './phrase.service';
 export class PhraseController {
   constructor(private readonly phraseService: PhraseService) {}
 
-
   /**
    * Searches for phrases containing the specified text.
    * @param query The text to search for in phrases.
@@ -18,7 +17,10 @@ export class PhraseController {
    */
   @Get('search')
   @ApiQuery({ name: 'query', description: 'Text to search for in phrases' })
-  @ApiResponse({ status: 200, description: 'Returns phrases containing the specified text' })
+  @ApiResponse({
+    status: 200,
+    description: 'Returns phrases containing the specified text',
+  })
   async searchByQuery(@Query('query') query: string) {
     return this.phraseService.searchByQuery(query);
   }
@@ -30,7 +32,10 @@ export class PhraseController {
    */
   @Get(':id')
   @ApiParam({ name: 'id', description: 'ID of the phrase' })
-  @ApiResponse({ status: 200, description: 'Returns a phrase object without translations' })
+  @ApiResponse({
+    status: 200,
+    description: 'Returns a phrase object without translations',
+  })
   async findById(@Param('id') id: string) {
     return this.phraseService.findById(id);
   }
@@ -44,10 +49,15 @@ export class PhraseController {
   @Get(':id/:language')
   @ApiParam({ name: 'id', description: 'ID of the phrase' })
   @ApiParam({ name: 'language', description: 'Language code for translation' })
-  @ApiResponse({ status: 200, description: 'Returns a translation of a phrase' })
+  @ApiResponse({
+    status: 200,
+    description: 'Returns a translation of a phrase',
+  })
   @ApiResponse({ status: 404, description: 'Phrase or translation not found' })
-  async findByIdAndLanguage(@Param('id') id: string, @Param('language') language: string){
+  async findByIdAndLanguage(
+    @Param('id') id: string,
+    @Param('language') language: string,
+  ) {
     return this.phraseService.findByIdAndLanguage(id, language);
   }
-
 }

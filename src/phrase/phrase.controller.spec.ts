@@ -12,15 +12,17 @@ describe('PhraseController', () => {
     index: jest.fn(),
     delete: jest.fn(),
   };
-  
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [PhraseController],
-      providers: [PhraseService,{
-        provide: ElasticsearchService,
-        useValue: mockElasticsearchService,
-      },],
+      providers: [
+        PhraseService,
+        {
+          provide: ElasticsearchService,
+          useValue: mockElasticsearchService,
+        },
+      ],
     }).compile();
 
     controller = module.get<PhraseController>(PhraseController);
@@ -29,7 +31,6 @@ describe('PhraseController', () => {
 
   describe('searchByQuery', () => {
     it('should call phraseService.searchByQuery and return the result', async () => {
-      
       const query = 'Hello, world!';
       const expectedResult = phrases;
 
@@ -46,7 +47,6 @@ describe('PhraseController', () => {
 
   describe('findById', () => {
     it('should call phraseService.findById and return the result', async () => {
-      
       const id = '1';
       const expectedResult = [phrases[0]];
 
@@ -63,12 +63,13 @@ describe('PhraseController', () => {
 
   describe('findByIdAndLanguage', () => {
     it('should call phraseService.findByIdAndLanguage and return the result', async () => {
-      
       const id = '1';
       const language = 'fr';
       const expectedResult = 'Bonjour, le monde!';
 
-      jest.spyOn(service, 'findByIdAndLanguage').mockResolvedValue(expectedResult);
+      jest
+        .spyOn(service, 'findByIdAndLanguage')
+        .mockResolvedValue(expectedResult);
 
       // Act
       const result = await controller.findByIdAndLanguage(id, language);
